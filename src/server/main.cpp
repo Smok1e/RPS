@@ -1,18 +1,33 @@
 #include <print>
 #include <iostream>
 
+#include <ArgParser/ArgParser.hpp>
+
 #include <network.hpp>
 #include <server/server.hpp>
 
 //========================================
 
-int main()
+int main(int argc, char* argv[])
 {
 	try
 	{
+		ArgParser options {
+			{"help", "Print usage reference and exit",     },
+			{"port", "Override server port",           true}
+		};
+
+		options.parse(argc, argv);
+
+		if (options["help"])
+		{
+			std::cout << options << std::endl;
+			return 0;
+		}
+
 		Network network;
 
-		Server server(&network, 1488);
+		Server server(&network, options["port"].as<int>(1488));
 		server.serve();
 	}
 

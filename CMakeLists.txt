@@ -6,6 +6,12 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 project(RPS)
 
+if (NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/external/ArgParser/CMakeLists.txt")
+	message(FATAL_ERROR "external/ArgParser does not contains CMakeLists.txt")
+endif ()
+
+add_subdirectory(external/ArgParser)
+
 add_executable(
 	server
 	src/network.cpp
@@ -23,6 +29,8 @@ target_include_directories(
 
 target_link_libraries(
 	server
+	PRIVATE
+	ArgParser
 	wsock32 
 	ws2_32
 )
