@@ -3,7 +3,8 @@
 
 #include <ArgParser/ArgParser.hpp>
 
-#include <network.hpp>
+#include <common/config.hpp>
+#include <common/network.hpp>
 #include <server/server.hpp>
 
 //========================================
@@ -26,8 +27,7 @@ int main(int argc, char* argv[])
 		}
 
 		Network network;
-
-		Server server(&network, options["port"].as<int>(1488));
+		Server server(options["port"].as<int>(config::default_port));
 		server.serve();
 	}
 

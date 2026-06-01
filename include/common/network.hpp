@@ -9,6 +9,20 @@
 
 //========================================
 
+#ifdef NETWORK_VERBOSE
+
+#define DEBUG_LOG(...) std::println(__VA_ARGS__)
+#define DEBUG_DUMP_HEX(...) DumpHex(__VA_ARGS__)
+
+#else
+
+#define DEBUG_LOG(...)
+#define DEBUG_DUMP_HEX(...)
+
+#endif // NETWORK_VERBOSE
+
+//========================================
+
 class NetworkError
 {
 public:
@@ -31,8 +45,15 @@ public:
 	Network();
 	~Network();
 
-	int    check(int    ret,  std::source_location loc = std::source_location::current()) const;
-	SOCKET check(SOCKET sock, std::source_location loc = std::source_location::current()) const;
+	static int Check(
+		int ret,  
+		std::source_location loc = std::source_location::current()
+	);
+
+	static SOCKET Check(
+		SOCKET sock, 
+		std::source_location loc = std::source_location::current()
+	);
 
 };
 

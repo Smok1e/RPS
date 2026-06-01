@@ -1,7 +1,7 @@
 #include <stdexcept>
 #include <print>
 
-#include <network.hpp>
+#include <common/network.hpp>
 
 //========================================
 
@@ -46,17 +46,22 @@ Network::Network()
 	if (WSAStartup(0x0202, &wsa_data) != 0)
 		throw std::runtime_error("WSAStartup failed");
 
-	std::println("network initialized");
+	DEBUG_LOG("network initialized");
 }
 
 Network::~Network()
 {
 	WSACleanup();
 
-	std::println("network uninitialized");
+	DEBUG_LOG("network uninitialized");
 }
 
-int Network::check(int ret, std::source_location loc /*= std::source_location::current()*/) const
+//========================================
+
+int Network::Check(
+	int ret, 
+	std::source_location loc /*= std::source_location::current()*/
+)
 {
 	if (ret == SOCKET_ERROR)
 		throw NetworkError(loc);
@@ -64,7 +69,10 @@ int Network::check(int ret, std::source_location loc /*= std::source_location::c
 	return ret;
 }
 
-SOCKET Network::check(SOCKET sock, std::source_location loc /*= std::source_location::current()*/) const
+SOCKET Network::Check(
+	SOCKET sock, 
+	std::source_location loc /*= std::source_location::current()*/
+)
 {
 	if (sock == INVALID_SOCKET)
 		throw NetworkError(loc);

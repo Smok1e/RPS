@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <string_view>
+#include <span>
 
 //========================================
 
@@ -38,7 +39,10 @@ public:
 	std::string_view readString();
 	bool readBoolean();
 
+	uint8_t* data();
 	const uint8_t* data() const;
+
+	operator std::span<const uint8_t>() const;
 
 	size_t size() const;
 	int remain() const;

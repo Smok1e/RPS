@@ -1,6 +1,6 @@
 #include <stdexcept>
 
-#include <packet.hpp>
+#include <common/packet.hpp>
 
 //========================================
 
@@ -32,7 +32,7 @@ void Packet::writeUint32(uint32_t value)
 
 void Packet::writeString(std::string_view string)
 {
-	writeUint32(string.length());
+	writeUint16(string.length());
 	write(
 		reinterpret_cast<const uint8_t*>(string.data()), 
 		string.length()
@@ -77,7 +77,7 @@ uint32_t Packet::readUint32()
 
 std::string_view Packet::readString()
 {
-	auto length = readUint32();
+	auto length = readUint16();
 	std::string_view string(
 		reinterpret_cast<const char*>(m_buffer.data()) + m_reading_offset,
 		length
@@ -94,9 +94,19 @@ bool Packet::readBoolean()
 
 //========================================
 
+uint8_t* Packet::data()
+{
+	return m_buffer.data();
+}
+
 const uint8_t* Packet::data() const
 {
 	return m_buffer.data();
+}
+
+Packet::operator std::span<const uint8_t>() const
+{
+	return m_buffer;
 }
 
 size_t Packet::size() const
