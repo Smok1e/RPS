@@ -14,8 +14,13 @@ option(
 
 #======================================== External packages
 
+find_package(SQLite3 REQUIRED)
 find_package(OpenSSL REQUIRED)
-find_package(unofficial-sqlite3 CONFIG REQUIRED)
+
+# CMake < 4.3
+if (NOT TARGET SQLite3::SQLite3)
+	add_library(SQLite3::SQLite3 ALIAS SQLite::SQLite3)
+endif ()
 
 if (NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/external/ArgParser/CMakeLists.txt")
 	message(FATAL_ERROR "external/ArgParser does not contains CMakeLists.txt; make sure to initialize git submodules")
@@ -44,11 +49,9 @@ target_include_directories(
 target_link_libraries(
 	common
 	PUBLIC
-	wsock32 
-	ws2_32
 	ArgParser
 	OpenSSL::Crypto
-	unofficial::sqlite3::sqlite3
+	SQLite3::SQLite3
 )
 
 target_compile_definitions(
@@ -56,6 +59,21 @@ target_compile_definitions(
 	PUBLIC
 	$<$<BOOL:${NETWORK_VERBOSE}>:NETWORK_VERBOSE>
 )
+
+if (WIN32)
+	target_compile_definitions(
+		common
+		PUBLIC
+		RPS_WINDOWS
+	)
+	
+	target_link_libraries(
+		common
+		PUBLIC
+		wsock32
+		ws2_32
+	)
+endif ()
 
 #======================================== Server
 

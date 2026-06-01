@@ -12,7 +12,7 @@
 class ClientPeer: public Peer
 {
 public:
-	ClientPeer(SOCKET socket);
+	ClientPeer(Network::socket_t socket);
 
 	void start() override;
 

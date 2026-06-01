@@ -3,6 +3,7 @@
 #include <vector>
 #include <string_view>
 #include <span>
+#include <cstdint>
 
 //========================================
 

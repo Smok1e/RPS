@@ -13,7 +13,7 @@ class Server;
 class ServerPeer: public Peer
 {
 public:
-	ServerPeer(SOCKET socket, Server* server);
+	ServerPeer(Network::socket_t socket, Server* server);
 	~ServerPeer();
 
 	void start();

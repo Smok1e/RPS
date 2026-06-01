@@ -9,7 +9,7 @@
 
 //========================================
 
-ClientPeer::ClientPeer(SOCKET socket):
+ClientPeer::ClientPeer(Network::socket_t socket):
 	Peer(socket)
 {
 	std::random_device device;

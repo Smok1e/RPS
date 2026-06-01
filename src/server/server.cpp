@@ -34,7 +34,7 @@ Server::Server(uint16_t port):
 
 Server::~Server()
 {
-	Network::Check(closesocket(m_socket));
+	Network::Close(m_socket);
 }
 
 void Server::serve()
@@ -49,7 +49,7 @@ void Server::serve()
 	}
 }
 
-void Server::addClient(SOCKET socket)
+void Server::addClient(Network::socket_t socket)
 {
 	(new ServerPeer(socket, this))->start();
 }

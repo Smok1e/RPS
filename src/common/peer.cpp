@@ -14,12 +14,12 @@ MessageNotAllowedError::MessageNotAllowedError():
 
 //========================================
 
-Peer::Peer(SOCKET socket):
+Peer::Peer(Network::socket_t socket):
 	m_socket(socket)
 {
 	// Retrieving remote address
 	sockaddr_in addr = {};
-	int addr_len = sizeof(addr);
+	Network::socklen_t addr_len = sizeof(addr);
 
 	Network::Check(
 		getpeername(m_socket, reinterpret_cast<sockaddr*>(&addr), &addr_len)
@@ -53,7 +53,7 @@ Peer::~Peer()
 	if (m_cipher_out_ctx)
 		EVP_CIPHER_CTX_free(m_cipher_out_ctx);
 
-	Network::Check(closesocket(m_socket));
+	Network::Close(m_socket);
 }
 
 void Peer::stop()

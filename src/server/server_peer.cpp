@@ -7,7 +7,7 @@
 
 //======================================== 
 
-ServerPeer::ServerPeer(SOCKET socket, Server* server):
+ServerPeer::ServerPeer(Network::socket_t socket, Server* server):
 	Peer(socket),
 	m_server(server)
 {}

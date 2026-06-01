@@ -53,7 +53,7 @@ public:
 		PerformanceTestReply
 	};
 
-	Peer(SOCKET socket);
+	Peer(Network::socket_t socket);
 	~Peer();
 
 	virtual void start() = 0;
@@ -62,7 +62,7 @@ public:
 protected:
 	bool m_running = true;
 	std::string m_remote_addr;
-	SOCKET m_socket;
+	Network::socket_t m_socket;
 	Packet m_packet_in;
 	Packet m_packet_out;
 	size_t m_pending_packet_size = 0;
