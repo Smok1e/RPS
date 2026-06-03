@@ -12,7 +12,7 @@ namespace config
 //========================================
 
 /// Network traffic encryption algorithm (should have 256-bit block size)
-constexpr const char* cipher = "aes-256-ctr";
+constexpr const char* cipher = "AES-256-CTR";
 
 /// Player password hashing algorithm
 constexpr const char* digest = "SHA256";

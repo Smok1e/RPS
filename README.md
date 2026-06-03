@@ -50,6 +50,7 @@ Project configuration is stored in `include/common/config.hpp` file.
 By default, the project uses the following config values:
 -	`1337` as the server port
 -	`127.0.0.1` as the default server address
+-	`AES-256-CTR` as the network cipher,
 -	`SHA2-256` as the password digest algorithm
 -	`score.db` as the database location
 -	`5 seconds` for the performance test duration
