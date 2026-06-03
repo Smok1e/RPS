@@ -267,7 +267,7 @@ void Peer::sendPublicKey(MessageID message_id)
 			: "reply"
 	);
 
-	curve25519_key_t public_key;
+	x25519_key_t public_key;
 	size_t public_key_len = sizeof(public_key);
 	EVP_PKEY_get_raw_public_key(m_pkey, public_key, &public_key_len);
 
@@ -278,7 +278,7 @@ void Peer::sendPublicKey(MessageID message_id)
 
 void Peer::deriveSharedSecret()
 {
-	curve25519_key_t remote_public_key;
+	x25519_key_t remote_public_key;
 	m_packet_in.read(remote_public_key, sizeof(remote_public_key));
 
 	auto* remote_pkey = EVP_PKEY_new_raw_public_key(

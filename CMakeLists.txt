@@ -14,6 +14,8 @@ option(
 
 #======================================== External packages
 
+find_package(Doxygen)
+
 find_package(SQLite3 REQUIRED)
 find_package(OpenSSL REQUIRED)
 
@@ -96,12 +98,19 @@ add_executable(
 
 target_link_libraries(client PRIVATE common)
 
-#========================================
+#======================================== Docs
 
-add_executable(
-	test
-	"src/test.cpp"
-	"src/common/score_provider"
-)
+if (DOXYGEN_FOUND)
+	set(DOXYGEN_PROJECT_NAME "RPS")
+	set(DOXYGEN_PROJECT_BRIEF "Rock/Paper/Scissors MMORPG")
+	set(DOXYGEN_OUTPUT_DIRECTORY "doc")
+    set(DOXYGEN_EXTRACT_ALL NO)
+    set(DOXYGEN_GENERATE_HTML YES)
+    set(DOXYGEN_GENERATE_LATEX NO)
 
-target_link_libraries(test PRIVATE common)
+    doxygen_add_docs(
+        doc
+        "include/"
+        "src/"
+    )
+endif ()

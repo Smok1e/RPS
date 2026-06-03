@@ -26,7 +26,18 @@ void ClientPeer::start()
 		m_state = State::ExpectingKeyExchangeInit;
 
 		while (m_running)
-			pollPacket();
+		{
+			switch (m_state)
+			{
+				case State::UserInput:
+					interpretCommand();
+					break;
+
+				default:
+					pollPacket();
+					break;
+			}
+		}
 	}
 
 	catch (const ProtocolError& err)
@@ -109,7 +120,7 @@ void ClientPeer::onKeyExchangeInit()
 
 	sendPublicKey(MessageID::KeyExchangeReply);
 	deriveSharedSecret();
-	sendPlayerAuthorizationRequest();
+	auth();
 }
 
 void ClientPeer::onPlayerAuthorizationReply()
@@ -118,6 +129,7 @@ void ClientPeer::onPlayerAuthorizationReply()
 		throw ProtocolError("unexpected PlayerAuthorizationReply");
 
 	auto success = m_packet_in.readBoolean();
+	auto reason = m_packet_in.readString();
 
 	DEBUG_LOG(
 		"[{}]: player authorization reply ({}) received",
@@ -132,8 +144,8 @@ void ClientPeer::onPlayerAuthorizationReply()
 
 	else
 	{
-		std::println("Invalid username or password; please try again");
-		sendPlayerAuthorizationRequest();
+		std::println("Auth failed: {}; please try again", reason);
+		auth();
 	}
 }
 
@@ -157,7 +169,7 @@ void ClientPeer::onPlayerScoreReply()
 
 	print_score("Global score");
 	print_score("Session score");
-	interpretCommand();
+	m_state = State::UserInput;
 }
 
 void ClientPeer::onPlayerMoveReply()
@@ -181,7 +193,7 @@ void ClientPeer::onPlayerMoveReply()
 		std::to_string(result)
 	);
 
-	interpretCommand();
+	m_state = State::UserInput;
 }
 
 void ClientPeer::onMoveHistoryReply()
@@ -218,7 +230,7 @@ void ClientPeer::onMoveHistoryReply()
 	else
 		std::println("history is empty");
 
-	interpretCommand();
+	m_state = State::UserInput;
 }
 
 void ClientPeer::onPerformanceTestReply()
@@ -232,14 +244,14 @@ void ClientPeer::onPerformanceTestReply()
 	if (data_size != sizeof(m_performance_test_data))
 	{
 		std::println("performance test failed: invalid data size");
-		interpretCommand();
+		m_state = State::UserInput;
 		return;
 	}
 
 	if (memcmp(m_packet_in.data() + m_packet_in.offset(), m_performance_test_data, data_size) != 0)
 	{
 		std::println("performance test failed: different data");
-		interpretCommand();
+		m_state = State::UserInput;
 		return;
 	}
 
@@ -256,7 +268,7 @@ void ClientPeer::onPerformanceTestReply()
 			)
 		);
 
-		interpretCommand();
+		m_state = State::UserInput;
 		return;
 	}
 
@@ -265,24 +277,24 @@ void ClientPeer::onPerformanceTestReply()
 
 //========================================
 
-void ClientPeer::sendPlayerAuthorizationRequest()
+void ClientPeer::sendPlayerAuthorizationRequest(
+	std::string_view username,
+	std::string_view password,
+	bool _register
+)
 {
-	std::string username, password;
-
-	std::print("Enter username: ");
-	std::cin >> username;
-	
-	std::print("Enter password: ");
-	std::cin >> password;
-
 	DEBUG_LOG(
-		"[{}]: sending player authorization request",
-		m_remote_addr
+		"[{}]: sending player authorization request{}",
+		m_remote_addr,
+		_register
+			? " (registering new player)"
+			: ""
 	);
 
 	m_packet_out.writeGeneric(MessageID::PlayerAuthorizationRequest);
 	m_packet_out.writeString(username);
 	m_packet_out.writeString(password);
+	m_packet_out.writeBoolean(_register);
 	sendPacket();
 	
 	m_state = State::ExpectingPlayerAuthorizationReply;
@@ -345,6 +357,30 @@ void ClientPeer::sendPerformanceTestRequest()
 
 //========================================
 
+void ClientPeer::auth()
+{
+	std::string username, password;
+
+	std::print("Enter username (leave blank to register a new player): ");
+	std::getline(std::cin, username);
+
+	bool _register = false;
+	if (username.empty())
+	{
+		std::print("Enter a new player username: ");
+		std::getline(std::cin, username);
+
+		_register = true;
+	}
+
+	std::print("Enter password: ");
+	std::getline(std::cin, password);
+
+	sendPlayerAuthorizationRequest(username, password, _register);
+}
+
+//========================================
+
 std::map<std::string_view, void(ClientPeer::*)()> ClientPeer::s_command_handler_table = {
 	{ "quit",     &ClientPeer::onQuitCommand      },
 	{ "score",    &ClientPeer::onScoreCommand     },
@@ -361,21 +397,20 @@ void ClientPeer::startGame()
 	for (const auto& [command, _]: s_command_handler_table)
 		std::println("* {}", command);
 
-	interpretCommand();
+	m_state = State::UserInput;
 }
 
 void ClientPeer::interpretCommand()
 {
 	std::string command;
 
-	retry:
 	std::print("> ");
-	std::cin >> command;
+	std::getline(std::cin, command);
 
 	if (!s_command_handler_table.contains(command))
 	{
 		std::println("Unknown command");
-		goto retry;
+		return;
 	}
 
 	(this->*(s_command_handler_table[command]))();

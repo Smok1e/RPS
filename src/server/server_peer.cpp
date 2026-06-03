@@ -67,7 +67,7 @@ void ServerPeer::threadProc()
 		);
 	}
 
-	std::lock_guard<std::mutex> lock(m_server->m_mutex);
+	std::lock_guard<std::mutex> lock(m_server->m_sync_root);
 	m_server->removeClient(this);
 }
 
@@ -103,6 +103,7 @@ void ServerPeer::onMessageReceived(MessageID id)
 
 		default:
 			Peer::onMessageReceived(id);
+			break;
 
 	}
 }
@@ -133,34 +134,60 @@ void ServerPeer::onPlayerAuthorizationRequest()
 
 	auto username = m_packet_in.readString();
 	auto password = m_packet_in.readString();
+	auto _register = m_packet_in.readBoolean();
 
 	ScoreProvider::PlayerID player_id;
+	if (_register)
 	{
-		std::lock_guard<std::mutex> lock(m_server->m_mutex);
-		player_id = m_server->m_score_provider.findPlayer(username);
+		{
+			std::lock_guard<std::mutex> lock(m_server->m_sync_root);
+			player_id = m_server->m_score_provider.createPlayer(username, password);
+		}
+
+		if (player_id == ScoreProvider::InvalidPlayer)
+		{
+			DEBUG_LOG(
+				"[{}]: player registration failed",
+				m_remote_addr
+			);
+
+			sendPlayerAuthorizationReply(false, "The requested username already taken");
+			return;
+		}
 	}
 
-	if (player_id == ScoreProvider::InvalidPlayer)
+	else
 	{
-		DEBUG_LOG(
-			"[{}]: player unauthorized: no such player",
-			m_remote_addr
-		);
+		{
+			std::lock_guard<std::mutex> lock(m_server->m_sync_root);
+			player_id = m_server->m_score_provider.findPlayer(username);
+		}
 
-		sendPlayerAuthorizationReply(false);
-		return;
-	}
+		if (player_id == ScoreProvider::InvalidPlayer)
+		{
+			DEBUG_LOG(
+				"[{}]: player unauthorized: no such player",
+				m_remote_addr
+			);
 
-	{
-		std::lock_guard<std::mutex> lock(m_server->m_mutex);
-		if (!m_server->m_score_provider.checkPlayerPassword(player_id, password))
+			sendPlayerAuthorizationReply(false, "Invalid username or password");
+			return;
+		}
+
+		bool password_is_valid = false;
+		{
+			std::lock_guard<std::mutex> lock(m_server->m_sync_root);
+			password_is_valid = m_server->m_score_provider.checkPlayerPassword(player_id, password);
+		}
+
+		if (!password_is_valid)
 		{
 			DEBUG_LOG(
 				"[{}]: player unauthorized: wrong password",
 				m_remote_addr
 			);
 
-			sendPlayerAuthorizationReply(false);
+			sendPlayerAuthorizationReply(false, "Invalid username or password");
 			return;
 		}
 	}
@@ -204,7 +231,7 @@ void ServerPeer::onPlayerMoveRequest()
 
 	GameMove server_move;
 	{
-		std::lock_guard<std::mutex> lock(m_server->m_mutex);
+		std::lock_guard<std::mutex> lock(m_server->m_sync_root);
 		server_move = m_server->generateMove();
 
 		result = player_move <=> server_move;
@@ -242,7 +269,7 @@ void ServerPeer::onPerformanceTestRequest()
 
 //========================================
 
-void ServerPeer::sendPlayerAuthorizationReply(bool success)
+void ServerPeer::sendPlayerAuthorizationReply(bool success, std::string_view reason /*= ""*/)
 {
 	DEBUG_LOG(
 		"[{}]: sending player authorization reply ({})",
@@ -254,6 +281,7 @@ void ServerPeer::sendPlayerAuthorizationReply(bool success)
 
 	m_packet_out.writeGeneric(MessageID::PlayerAuthorizationReply);
 	m_packet_out.writeBoolean(success);
+	m_packet_out.writeString(reason);
 	sendPacket();
 }
 
@@ -266,7 +294,7 @@ void ServerPeer::sendPlayerScoreReply()
 
 	ScoreProvider::PlayerScore score;
 	{
-		std::lock_guard<std::mutex> lock(m_server->m_mutex);
+		std::lock_guard<std::mutex> lock(m_server->m_sync_root);
 		score = m_server->m_score_provider.getPlayerScore(m_player_id);
 	};
 
@@ -291,8 +319,7 @@ void ServerPeer::sendPlayerMoveReply(GameMove player_move, GameMove server_move,
 	m_packet_out.writeGeneric(player_move);
 	m_packet_out.writeGeneric(server_move);
 	m_packet_out.writeGeneric(result);
-	sendPacket();	
-
+	sendPacket();
 }
 
 void ServerPeer::sendMoveHistoryReply()
