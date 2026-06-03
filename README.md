@@ -120,7 +120,7 @@ The following table describes the GameMove enumeration:
 |--------|-------|---------------
 | Win    | 0x00  | The player beats the opponent
 | Defeat | 0x01  | The player is defeated by the opponent
-| Draw   | 0x02  | The player and the opponent choices ar the same
+| Draw   | 0x02  | The player and the opponent choices are the same
 
 # Messages payload structure
 
