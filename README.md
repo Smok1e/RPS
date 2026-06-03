@@ -303,7 +303,7 @@ Message payload:
 
 ![score request](readme/score_request.png)
 
-## Game procedure
+## Game move procedure
 -	The user inputs the "rock", "paper" or "scissors" command
 -	Client sends PlayerMoveRequest message with the corresponding option
 -	Server generates random move and responds with the PlayerMoveReply message
