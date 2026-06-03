@@ -10,7 +10,7 @@ and dangerously precise. Or master the cunning Paper, outwitting foes with endle
 adaptability and deceptive control.
 
 In a realm where every encounter is a mind game and every victory reshapes your 
-legend, strategy is power—and prediction is survival. No luck. No mercy. Just pure, 
+legend, strategy is power and prediction is survival. No luck. No mercy. Just pure, 
 elemental conflict reborn as an epic MMO experience.
 
 # Building
