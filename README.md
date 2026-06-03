@@ -41,6 +41,25 @@ cmake ..
 cmake --build .
 ```
 
+## Usage
+
+### Server usage
+```
+server [options]
+Available options:
+	-h, --help         - Print usage reference and exit
+	-p, --port=<value> - Override server port
+```
+
+### Client usage
+```
+client [options]
+Available options:
+	-h, --help            - Print usage reference and exit
+	-a, --address=<value> - Override server address
+	-p, --port=<value>    - Override server port
+```
+
 # Technical details
 
 ## Configuration
@@ -50,10 +69,25 @@ Project configuration is stored in `include/common/config.hpp` file.
 By default, the project uses the following config values:
 -	`1337` as the server port
 -	`127.0.0.1` as the default server address
--	`AES-256-CTR` as the network cipher,
+-	`AES-256-CTR` as the network cipher
 -	`SHA2-256` as the password digest algorithm
 -	`score.db` as the database location
 -	`5 seconds` for the performance test duration
+
+## Debug logging
+
+The game can be configured to enable detiled debug logging. To enable logging, 
+pass `-DNETWORK_VERBOSE=ON` option to the cmake command line when configuring project.
+
+## Database
+
+The game uses sqlite3 database to store player information and score. The database consists
+of a single table named `players`, each row defines single player:
+
+| **id**  | **username** | **password_hash** | **wins** | **defeats** | **draws** |
+|---------|--------------|-------------------|----------|-------------|-----------|
+| INTEGER | TEXT         | BLOB              | INTEGER  | INTEGER     | INTEGER   |
+| _PK_    |              |                   |          |             |           |
 
 ## Data type representations used in the protocol
 
